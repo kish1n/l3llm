@@ -20,3 +20,5 @@ function(qllm_add_test name)
 endfunction()
 
 qllm_add_test(test_embed)
+qllm_add_test(test_rmsnorm)
+qllm_add_test(test_qkv)
