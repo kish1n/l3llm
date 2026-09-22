@@ -33,8 +33,9 @@ struct Fixture {
     std::vector<std::int32_t> token_ids;
 };
 
-// The prompt's token ids, from reference/golden/manifest.json.
-inline std::vector<std::int32_t> golden_token_ids() {
+// An integer array from reference/golden/manifest.json -- "token_ids" for
+// the prompt, "generated_new_tokens" for what greedy decoding produced.
+inline std::vector<std::int32_t> golden_ints(std::string_view key) {
     const std::filesystem::path path = std::filesystem::path(QLLM_GOLDEN_DIR) / "manifest.json";
     std::ifstream f(path, std::ios::binary);
     if (!f) {
@@ -44,14 +45,40 @@ inline std::vector<std::int32_t> golden_token_ids() {
     buf << f.rdbuf();
 
     const json::Value root = json::parse(buf.str(), path.string());
-    const json::Value *ids = root.find("token_ids");
+    const json::Value *ids = root.find(key);
     if (ids == nullptr) {
-        die("fixture: {} has no token_ids", path.string());
+        die("fixture: {} has no {}", path.string(), key);
     }
 
     std::vector<std::int32_t> out;
-    for (const json::Value &v : ids->as_array("token_ids")) {
-        out.push_back(static_cast<std::int32_t>(v.as_int64("token_ids[]")));
+    for (const json::Value &v : ids->as_array(key)) {
+        out.push_back(static_cast<std::int32_t>(v.as_int64(key)));
+    }
+    return out;
+}
+
+inline std::vector<std::int32_t> golden_token_ids() { return golden_ints("token_ids"); }
+
+// A golden dump read back as float32, for tests that want to feed one
+// step's reference output into the next step instead of recomputing the
+// whole chain -- it isolates the step under test from upstream error.
+inline std::vector<float> load_golden(std::string_view name) {
+    const std::filesystem::path path =
+        std::filesystem::path(QLLM_GOLDEN_DIR) / (std::string(name) + ".bin");
+    std::ifstream f(path, std::ios::binary | std::ios::ate);
+    if (!f) {
+        die("fixture: could not open {}", path.string());
+    }
+    const std::streamsize bytes = f.tellg();
+    if (bytes < 0 || bytes % static_cast<std::streamsize>(sizeof(float)) != 0) {
+        die("fixture: {} is {} bytes, not a whole number of float32s", path.string(),
+            static_cast<long long>(bytes));
+    }
+    std::vector<float> out(static_cast<std::size_t>(bytes) / sizeof(float));
+    f.seekg(0);
+    f.read(reinterpret_cast<char *>(out.data()), bytes);
+    if (!f) {
+        die("fixture: short read from {}", path.string());
     }
     return out;
 }

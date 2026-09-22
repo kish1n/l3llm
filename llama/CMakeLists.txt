@@ -8,6 +8,11 @@ add_library(qllm_core STATIC
     embed.cc
     rmsnorm.cc
     linear.cc
+    rope.cc
+    attention.cc
+    mlp.cc
+    layer.cc
+    model.cc
     summary.cc
 )
 target_include_directories(qllm_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
