@@ -8,11 +8,13 @@
 #include "linear.h"
 #include "rmsnorm.h"
 #include "rope.h"
+#include "trace.h"
 
 namespace qllm {
 
 ForwardResult forward(const SafeTensors &weights, const ModelConfig &cfg,
                       std::span<const std::int32_t> token_ids, const LayerHook &on_layer) {
+    const TraceScope trace("forward");
     if (token_ids.empty()) {
         die("forward: no tokens");
     }
@@ -25,6 +27,7 @@ ForwardResult forward(const SafeTensors &weights, const ModelConfig &cfg,
     for (std::int64_t i = 0; i < cfg.num_hidden_layers; ++i) {
         decoder_layer(x, weights, cfg, i, table, n_tokens);
         if (on_layer) {
+            const TraceScope hook_trace("layer_hook");
             on_layer(i, x);
         }
     }
@@ -34,7 +37,10 @@ ForwardResult forward(const SafeTensors &weights, const ModelConfig &cfg,
 
     const TensorView &head = cfg.tie_word_embeddings ? weights.at("model.embed_tokens.weight")
                                                      : weights.at("lm_head.weight");
-    out.logits = linear(out.hidden, head);
+    {
+        const TraceScope head_trace("lm_head");
+        out.logits = linear(out.hidden, head);
+    }
     return out;
 }
 

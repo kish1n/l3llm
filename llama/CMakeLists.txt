@@ -14,6 +14,7 @@ add_library(qllm_core STATIC
     layer.cc
     model.cc
     summary.cc
+    trace.cc
 )
 target_include_directories(qllm_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

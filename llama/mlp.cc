@@ -5,6 +5,7 @@
 
 #include "die.h"
 #include "linear.h"
+#include "trace.h"
 
 namespace qllm {
 namespace {
@@ -18,6 +19,7 @@ inline float silu(float z) { return z / (1.0f + std::exp(-z)); }
 
 std::vector<float> mlp(std::span<const float> h, const TensorView &gate, const TensorView &up,
                        const TensorView &down) {
+    const TraceScope trace("mlp");
     std::vector<float> g = linear(h, gate);
     const std::vector<float> u = linear(h, up);
     if (g.size() != u.size()) {
@@ -26,8 +28,12 @@ std::vector<float> mlp(std::span<const float> h, const TensorView &gate, const T
 
     // Fuse the activation and the gate into one pass over the 8192-wide
     // intermediate, reusing g's buffer rather than allocating a third.
-    for (std::size_t i = 0; i < g.size(); ++i) {
-        g[i] = silu(g[i]) * u[i];
+    {
+        // Add, divide, multiply. exp and unary sign changes are excluded.
+        const TraceScope activation_trace("silu_multiply", 3.0 * g.size());
+        for (std::size_t i = 0; i < g.size(); ++i) {
+            g[i] = silu(g[i]) * u[i];
+        }
     }
     return linear(g, down);
 }

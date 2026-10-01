@@ -3,11 +3,13 @@
 #include <cstddef>
 
 #include "die.h"
+#include "trace.h"
 
 namespace qllm {
 
 std::vector<float> embed(const SafeTensors &weights, const ModelConfig &cfg,
                          std::span<const std::int32_t> token_ids) {
+    const TraceScope trace("embedding");
     const TensorView &table = weights.at("model.embed_tokens.weight");
     if (table.shape.size() != 2) {
         die("embed: model.embed_tokens.weight has rank {}, expected 2", table.shape.size());

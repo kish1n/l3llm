@@ -4,6 +4,7 @@
 #include <numbers>
 
 #include "die.h"
+#include "trace.h"
 
 namespace qllm {
 namespace {
@@ -33,6 +34,7 @@ void apply_llama3_scaling(std::vector<double> &inv_freq, const RopeScaling &rs) 
 } // namespace
 
 RopeTable rope_table(const ModelConfig &cfg, std::int64_t n_positions) {
+    const TraceScope trace("rope_table");
     if (cfg.head_dim <= 0 || cfg.head_dim % 2 != 0) {
         die("rope: head_dim {} must be positive and even", cfg.head_dim);
     }
@@ -73,6 +75,7 @@ RopeTable rope_table(const ModelConfig &cfg, std::int64_t n_positions) {
 
 std::vector<float> split_heads(std::span<const float> x, std::int64_t n_heads,
                                std::int64_t head_dim) {
+    const TraceScope trace("split_heads");
     const std::size_t width = static_cast<std::size_t>(n_heads * head_dim);
     if (width == 0 || x.size() % width != 0) {
         die("split_heads: {} floats is not a whole number of rows of {} heads x {}", x.size(),
@@ -96,6 +99,7 @@ std::vector<float> split_heads(std::span<const float> x, std::int64_t n_heads,
 
 void apply_rope(std::span<float> x, std::int64_t n_heads, std::int64_t n_tokens,
                 const RopeTable &table) {
+    const TraceScope trace("apply_rope", 3.0 * x.size());
     const std::size_t hd = static_cast<std::size_t>(table.head_dim);
     const std::size_t half = hd / 2;
     if (x.size() != static_cast<std::size_t>(n_heads * n_tokens) * hd) {

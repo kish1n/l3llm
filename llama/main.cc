@@ -1,4 +1,4 @@
-// Usage: llama [model-dir] [token-id ...]
+// Usage: llama [--trace file.json] [--trace-attention] [--warmup N] [model-dir] [token-id ...]
 //   Falls back to $QLLM_MODEL_DIR when no model dir is given. With token
 //   ids, runs a forward pass and prints the most likely next tokens;
 //   without them, stops after the load summary. There is no tokenizer
@@ -6,6 +6,7 @@
 //   a prompt's worth).
 
 #include <algorithm>
+#include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -20,6 +21,7 @@
 #include "model.h"
 #include "safetensors.h"
 #include "summary.h"
+#include "trace.h"
 
 // Owns the mmap: move-only, because SafeTensors is.
 struct LoadedModel {
@@ -50,26 +52,90 @@ LoadedModel load_model(std::string_view model_dir) {
 }
 
 int main(int argc, char **argv) {
+    const auto usage = [&] {
+        std::println(
+            "usage: {} [--trace file.json] [--trace-attention] [--warmup N] "
+            "<model-dir> [token-id ...]\n"
+            "  --trace             save the forward operator timeline for ui.perfetto.dev\n"
+            "  --trace-attention   include per-row scores, softmax and weighted values\n"
+            "  --warmup N          run N untraced forwards before the measured pass\n"
+            "  --help              show this help\n"
+            "  QLLM_MODEL_DIR is used when no model directory is given",
+            argv[0]);
+    };
+    std::string trace_path;
+    bool detailed_attention = false;
+    int warmup = 0;
+    bool options = true;
+    std::vector<std::string_view> positional;
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        if (options && arg == "--") {
+            options = false;
+        } else if (options && arg == "--help") {
+            usage();
+            return 0;
+        } else if (options && arg == "--trace-attention") {
+            detailed_attention = true;
+        } else if (options && (arg == "--trace" || arg == "--warmup")) {
+            if (++i == argc) {
+                std::println(stderr, "{} requires a value", arg);
+                return 2;
+            }
+            const std::string_view value = argv[i];
+            if (arg == "--trace") {
+                trace_path = value;
+                if (trace_path.empty()) {
+                    std::println(stderr, "--trace requires a nonempty file path");
+                    return 2;
+                }
+            } else {
+                const auto [end, error] =
+                    std::from_chars(value.data(), value.data() + value.size(), warmup);
+                if (error != std::errc{} || end != value.data() + value.size() || warmup < 0) {
+                    std::println(stderr, "--warmup requires a nonnegative integer");
+                    return 2;
+                }
+            }
+        } else if (options && arg.starts_with("--")) {
+            std::println(stderr, "unknown option: {}", arg);
+            return 2;
+        } else {
+            positional.push_back(arg);
+        }
+    }
+    if (detailed_attention && trace_path.empty()) {
+        std::println(stderr, "--trace-attention requires --trace file.json");
+        return 2;
+    }
+
     std::string model_dir;
-    if (argc > 1) {
-        model_dir = argv[1];
+    if (!positional.empty()) {
+        model_dir = positional.front();
     } else if (const char *env = std::getenv("QLLM_MODEL_DIR")) {
         model_dir = env;
     } else {
-        std::println(stderr,
-                     "usage: {} <model-dir>\n"
-                     "  or set QLLM_MODEL_DIR to a directory containing\n"
-                     "  config.json and model.safetensors",
-                     argv[0]);
+        usage();
+        return 2;
+    }
+
+    std::vector<std::int32_t> token_ids;
+    for (std::size_t i = 1; i < positional.size(); ++i) {
+        const std::string_view value = positional[i];
+        std::int32_t id;
+        const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), id);
+        if (error != std::errc{} || end != value.data() + value.size() || id < 0) {
+            std::println(stderr, "invalid token id: {}", value);
+            return 2;
+        }
+        token_ids.push_back(id);
+    }
+    if (token_ids.empty() && (!trace_path.empty() || warmup > 0)) {
+        std::println(stderr, "tracing and warmup require token ids after the model directory");
         return 2;
     }
 
     const LoadedModel model = load_model(model_dir);
-
-    std::vector<std::int32_t> token_ids;
-    for (int i = 2; i < argc; ++i) {
-        token_ids.push_back(static_cast<std::int32_t>(std::atoi(argv[i])));
-    }
     if (token_ids.empty()) {
         std::println();
         std::println("2. No token ids given; pass them after the model dir to run a forward pass.");
@@ -80,7 +146,15 @@ int main(int argc, char **argv) {
     std::println("2. Forward pass");
     std::println("   tokens              {}", token_ids.size());
 
+    for (int i = 0; i < warmup; ++i) {
+        (void)qllm::forward(model.weights, model.config, token_ids);
+    }
+    const qllm::TraceSession trace(!trace_path.empty(), detailed_attention);
     const qllm::ForwardResult out = qllm::forward(model.weights, model.config, token_ids);
+    if (!trace_path.empty()) {
+        trace.write(trace_path);
+        std::println("   operator timeline   {} (open in https://ui.perfetto.dev)", trace_path);
+    }
 
     // Top 5 of the last row by logit; a partial sort beats sorting 128k.
     const std::size_t vocab = static_cast<std::size_t>(model.config.vocab_size);
@@ -89,7 +163,7 @@ int main(int argc, char **argv) {
     for (std::size_t i = 0; i < vocab; ++i) {
         order[i] = static_cast<std::int32_t>(i);
     }
-    constexpr std::size_t kTop = 5;
+    const std::size_t kTop = std::min<std::size_t>(5, vocab);
     std::partial_sort(order.begin(), order.begin() + kTop, order.end(),
                       [row](std::int32_t a, std::int32_t b) { return row[a] > row[b]; });
 

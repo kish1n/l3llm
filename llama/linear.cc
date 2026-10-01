@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "die.h"
+#include "trace.h"
 
 namespace qllm {
 
@@ -20,6 +21,16 @@ std::vector<float> linear(std::span<const float> x, const TensorView &w) {
 
     const std::span<const std::uint16_t> wq = w.bf16();
     const std::size_t n_tokens = x.size() / in_features;
+
+    // Use the projection's role for the bar and retain its full tensor name.
+    std::string_view role = w.name;
+    if (role.ends_with(".weight")) {
+        role.remove_suffix(7);
+    }
+    if (const auto dot = role.rfind('.'); dot != std::string_view::npos) {
+        role.remove_prefix(dot + 1);
+    }
+    const TraceScope trace(role, 2.0 * n_tokens * out_features * in_features, w.name);
 
     std::vector<float> out(n_tokens * out_features);
     for (std::size_t t = 0; t < n_tokens; ++t) {

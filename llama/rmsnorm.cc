@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "die.h"
+#include "trace.h"
 
 namespace qllm {
 
@@ -18,6 +19,9 @@ std::vector<float> rmsnorm(std::span<const float> x, const TensorView &gamma, do
 
     const std::span<const std::uint16_t> g = gamma.bf16();
     const std::size_t n_tokens = x.size() / hidden;
+    // Square + accumulate + two scaling multiplies per element; two
+    // divisions and epsilon addition per row. sqrt is excluded.
+    const TraceScope trace("rmsnorm", 4.0 * x.size() + 3.0 * n_tokens, gamma.name);
 
     std::vector<float> out(x.size());
     for (std::size_t t = 0; t < n_tokens; ++t) {
