@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-namespace qllm {
+namespace l3llm {
 
 class TraceScope;
 
@@ -70,4 +70,4 @@ class TraceScope {
     std::size_t index_ = 0;
 };
 
-} // namespace qllm
+} // namespace l3llm

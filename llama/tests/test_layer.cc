@@ -16,20 +16,20 @@
 #include "rope.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_layer");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_layer");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
     const std::int64_t n_tokens = static_cast<std::int64_t>(fx.token_ids.size());
 
-    std::vector<float> x = qllm::embed(fx.weights, fx.config, fx.token_ids);
-    const qllm::RopeTable table = qllm::rope_table(fx.config, n_tokens);
+    std::vector<float> x = l3llm::embed(fx.weights, fx.config, fx.token_ids);
+    const l3llm::RopeTable table = l3llm::rope_table(fx.config, n_tokens);
 
-    qllm::decoder_layer(x, fx.weights, fx.config, /*index=*/0, table, n_tokens);
+    l3llm::decoder_layer(x, fx.weights, fx.config, /*index=*/0, table, n_tokens);
     std::println("[info ] layer 0 applied in place to {} x {}", n_tokens, fx.config.hidden_size);
 
-    const auto result = qllm::testing::compare("layer0_output", x.data(), x.size(),
-                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, QLLM_GOLDEN_DIR);
+    const auto result = l3llm::testing::compare("layer0_output", x.data(), x.size(),
+                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, L3LLM_GOLDEN_DIR);
     return result.ok ? 0 : 1;
 }

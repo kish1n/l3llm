@@ -6,7 +6,7 @@
 #include <print>
 #include <string>
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 std::string human_bytes(std::size_t n) {
@@ -87,4 +87,4 @@ void print_safetensors(const SafeTensors &weights, const ModelConfig &cfg) {
     std::println();
 }
 
-} // namespace qllm
+} // namespace l3llm

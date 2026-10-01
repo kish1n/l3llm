@@ -7,7 +7,7 @@
 #include "die.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 
 std::vector<float> attention(std::span<const float> q, std::span<const float> k,
                              std::span<const float> v, const ModelConfig &cfg,
@@ -116,4 +116,4 @@ std::vector<float> merge_heads(std::span<const float> x, std::int64_t n_heads,
     return out;
 }
 
-} // namespace qllm
+} // namespace l3llm

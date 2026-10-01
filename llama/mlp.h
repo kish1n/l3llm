@@ -14,7 +14,7 @@
 
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // h is [n_tokens, hidden] float32 (already normed). gate and up are
 // [intermediate, hidden], down is [hidden, intermediate].
@@ -22,4 +22,4 @@ namespace qllm {
 std::vector<float> mlp(std::span<const float> h, const TensorView &gate, const TensorView &up,
                        const TensorView &down);
 
-} // namespace qllm
+} // namespace l3llm

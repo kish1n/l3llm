@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-namespace qllm {
+namespace l3llm {
 
 // Llama-3-style RoPE frequency rescaling. Absent for models that use plain
 // RoPE, in which case rope_scaling on ModelConfig is nullopt.
@@ -45,4 +45,4 @@ struct ModelConfig {
     static ModelConfig load(const std::filesystem::path &model_dir);
 };
 
-} // namespace qllm
+} // namespace l3llm

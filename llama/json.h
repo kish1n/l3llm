@@ -19,7 +19,7 @@
 #include <string_view>
 #include <vector>
 
-namespace qllm::json {
+namespace l3llm::json {
 
 struct Member;
 
@@ -64,4 +64,4 @@ struct Member {
 // source in that message.
 Value parse(std::string_view text, std::string_view origin);
 
-} // namespace qllm::json
+} // namespace l3llm::json

@@ -10,7 +10,7 @@
 #include "rope.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 
 ForwardResult forward(const SafeTensors &weights, const ModelConfig &cfg,
                       std::span<const std::int32_t> token_ids, const LayerHook &on_layer) {
@@ -60,4 +60,4 @@ std::int32_t argmax_last(const ForwardResult &out, const ModelConfig &cfg) {
     return static_cast<std::int32_t>(best);
 }
 
-} // namespace qllm
+} // namespace l3llm

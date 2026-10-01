@@ -28,7 +28,7 @@
 #include <utility>
 #include <vector>
 
-namespace qllm {
+namespace l3llm {
 
 enum class DType { BF16, F16, F32, F64, I8, U8, I16, I32, I64, Bool };
 
@@ -112,4 +112,4 @@ class SafeTensors {
     std::vector<std::pair<std::string, std::string>> metadata_;
 };
 
-} // namespace qllm
+} // namespace l3llm

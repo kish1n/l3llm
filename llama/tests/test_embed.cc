@@ -13,17 +13,17 @@
 #include "fixture.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_embed");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_embed");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
 
-    const std::vector<float> out = qllm::embed(fx.weights, fx.config, fx.token_ids);
+    const std::vector<float> out = l3llm::embed(fx.weights, fx.config, fx.token_ids);
     std::println("[info ] {} tokens x {} hidden = {} floats", fx.token_ids.size(),
                  fx.config.hidden_size, out.size());
 
-    const auto result = qllm::testing::compare("embed_output", out.data(), out.size(),
-                                               /*abs_tol=*/0.0, /*rel_tol=*/0.0, QLLM_GOLDEN_DIR);
+    const auto result = l3llm::testing::compare("embed_output", out.data(), out.size(),
+                                               /*abs_tol=*/0.0, /*rel_tol=*/0.0, L3LLM_GOLDEN_DIR);
     return result.ok ? 0 : 1;
 }

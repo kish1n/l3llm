@@ -4,7 +4,7 @@
 // prompt's token ids from the manifest so the tests follow whatever
 // dump_golden.py was last run with.
 //
-// Every test needs the real weights, so when QLLM_MODEL_DIR is unset they
+// Every test needs the real weights, so when L3LLM_MODEL_DIR is unset they
 // exit kSkip and CTest reports "Skipped" rather than a failure -- a fresh
 // clone without a 2.3 GiB download still gets a green run.
 
@@ -23,7 +23,7 @@
 #include "json.h"
 #include "safetensors.h"
 
-namespace qllm::testing {
+namespace l3llm::testing {
 
 inline constexpr int kSkip = 77; // matches SKIP_RETURN_CODE in CMakeLists.txt
 
@@ -36,7 +36,7 @@ struct Fixture {
 // An integer array from reference/golden/manifest.json -- "token_ids" for
 // the prompt, "generated_new_tokens" for what greedy decoding produced.
 inline std::vector<std::int32_t> golden_ints(std::string_view key) {
-    const std::filesystem::path path = std::filesystem::path(QLLM_GOLDEN_DIR) / "manifest.json";
+    const std::filesystem::path path = std::filesystem::path(L3LLM_GOLDEN_DIR) / "manifest.json";
     std::ifstream f(path, std::ios::binary);
     if (!f) {
         die("fixture: could not open {}", path.string());
@@ -64,7 +64,7 @@ inline std::vector<std::int32_t> golden_token_ids() { return golden_ints("token_
 // whole chain -- it isolates the step under test from upstream error.
 inline std::vector<float> load_golden(std::string_view name) {
     const std::filesystem::path path =
-        std::filesystem::path(QLLM_GOLDEN_DIR) / (std::string(name) + ".bin");
+        std::filesystem::path(L3LLM_GOLDEN_DIR) / (std::string(name) + ".bin");
     std::ifstream f(path, std::ios::binary | std::ios::ate);
     if (!f) {
         die("fixture: could not open {}", path.string());
@@ -83,19 +83,19 @@ inline std::vector<float> load_golden(std::string_view name) {
     return out;
 }
 
-// Returns nullopt when QLLM_MODEL_DIR is unset; the caller returns kSkip.
-inline bool have_model() { return std::getenv("QLLM_MODEL_DIR") != nullptr; }
+// Returns nullopt when L3LLM_MODEL_DIR is unset; the caller returns kSkip.
+inline bool have_model() { return std::getenv("L3LLM_MODEL_DIR") != nullptr; }
 
 inline void print_skip(std::string_view test) {
-    std::println("[skip ] {}: set QLLM_MODEL_DIR to a directory with config.json "
+    std::println("[skip ] {}: set L3LLM_MODEL_DIR to a directory with config.json "
                  "and model.safetensors",
                  test);
 }
 
 inline Fixture load() {
-    const char *model_dir = std::getenv("QLLM_MODEL_DIR");
+    const char *model_dir = std::getenv("L3LLM_MODEL_DIR");
     if (model_dir == nullptr) {
-        die("fixture: QLLM_MODEL_DIR is unset (call have_model() first)");
+        die("fixture: L3LLM_MODEL_DIR is unset (call have_model() first)");
     }
     return Fixture{
         ModelConfig::load(model_dir),
@@ -104,4 +104,4 @@ inline Fixture load() {
     };
 }
 
-} // namespace qllm::testing
+} // namespace l3llm::testing

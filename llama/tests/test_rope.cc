@@ -18,18 +18,18 @@
 #include "rope.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_rope");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_rope");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
     const std::int64_t n_tokens = static_cast<std::int64_t>(fx.token_ids.size());
 
-    const std::vector<float> x = qllm::embed(fx.weights, fx.config, fx.token_ids);
-    const std::vector<float> h = qllm::rmsnorm(
+    const std::vector<float> x = l3llm::embed(fx.weights, fx.config, fx.token_ids);
+    const std::vector<float> h = l3llm::rmsnorm(
         x, fx.weights.at("model.layers.0.input_layernorm.weight"), fx.config.rms_norm_eps);
 
-    const qllm::RopeTable table = qllm::rope_table(fx.config, n_tokens);
+    const l3llm::RopeTable table = l3llm::rope_table(fx.config, n_tokens);
     std::println("[info ] head_dim={} theta={:g} rope_type={}", fx.config.head_dim,
                  fx.config.rope_theta,
                  fx.config.rope_scaling ? fx.config.rope_scaling->rope_type : "none");
@@ -40,11 +40,11 @@ int main() {
                      fx.config.num_attention_heads},
           std::tuple{"layer0_k_roped", "model.layers.0.self_attn.k_proj.weight",
                      fx.config.num_key_value_heads}}) {
-        const std::vector<float> proj = qllm::linear(h, fx.weights.at(tensor));
-        std::vector<float> heads = qllm::split_heads(proj, n_heads, fx.config.head_dim);
-        qllm::apply_rope(heads, n_heads, n_tokens, table);
-        ok &= qllm::testing::compare(golden, heads.data(), heads.size(),
-                                     /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, QLLM_GOLDEN_DIR)
+        const std::vector<float> proj = l3llm::linear(h, fx.weights.at(tensor));
+        std::vector<float> heads = l3llm::split_heads(proj, n_heads, fx.config.head_dim);
+        l3llm::apply_rope(heads, n_heads, n_tokens, table);
+        ok &= l3llm::testing::compare(golden, heads.data(), heads.size(),
+                                     /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, L3LLM_GOLDEN_DIR)
                   .ok;
     }
     return ok ? 0 : 1;

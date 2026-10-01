@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace qllm::testing {
+namespace l3llm::testing {
 
 struct CompareResult {
     std::string name;
@@ -26,7 +26,7 @@ struct CompareResult {
 // dump_golden.py) and diffs it elementwise against ptr[0..n). Prints one
 // report line and returns the measured error.
 //
-// golden_dir resolution when left empty: QLLM_GOLDEN_DIR env var, else
+// golden_dir resolution when left empty: L3LLM_GOLDEN_DIR env var, else
 // "reference/golden" relative to the current working directory.
 //
 // Pass/fail uses numpy's allclose rule per element:
@@ -39,7 +39,7 @@ inline CompareResult compare(const std::string& name, const float* ptr, std::siz
     result.n = n;
 
     if (golden_dir.empty()) {
-        if (const char* env = std::getenv("QLLM_GOLDEN_DIR")) {
+        if (const char* env = std::getenv("L3LLM_GOLDEN_DIR")) {
             golden_dir = env;
         } else {
             golden_dir = "reference/golden";
@@ -93,4 +93,4 @@ inline CompareResult compare(const std::string& name, const float* ptr, std::siz
     return result;
 }
 
-}  // namespace qllm::testing
+}  // namespace l3llm::testing

@@ -15,7 +15,7 @@
 #include "config.h"
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // Returns [token_ids.size(), hidden_size] float32, row-major, laid out to
 // match the reference dump. die()s on a shape that contradicts the config
@@ -23,4 +23,4 @@ namespace qllm {
 std::vector<float> embed(const SafeTensors &weights, const ModelConfig &cfg,
                          std::span<const std::int32_t> token_ids);
 
-} // namespace qllm
+} // namespace l3llm

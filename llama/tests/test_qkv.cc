@@ -18,14 +18,14 @@
 #include "rmsnorm.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_qkv");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_qkv");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
 
-    const std::vector<float> x = qllm::embed(fx.weights, fx.config, fx.token_ids);
-    const std::vector<float> h = qllm::rmsnorm(
+    const std::vector<float> x = l3llm::embed(fx.weights, fx.config, fx.token_ids);
+    const std::vector<float> h = l3llm::rmsnorm(
         x, fx.weights.at("model.layers.0.input_layernorm.weight"), fx.config.rms_norm_eps);
 
     bool ok = true;
@@ -33,9 +33,9 @@ int main() {
          {std::pair{"layer0_q_proj", "model.layers.0.self_attn.q_proj.weight"},
           std::pair{"layer0_k_proj", "model.layers.0.self_attn.k_proj.weight"},
           std::pair{"layer0_v_proj", "model.layers.0.self_attn.v_proj.weight"}}) {
-        const std::vector<float> y = qllm::linear(h, fx.weights.at(tensor));
-        ok &= qllm::testing::compare(golden, y.data(), y.size(),
-                                     /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, QLLM_GOLDEN_DIR)
+        const std::vector<float> y = l3llm::linear(h, fx.weights.at(tensor));
+        ok &= l3llm::testing::compare(golden, y.data(), y.size(),
+                                     /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, L3LLM_GOLDEN_DIR)
                   .ok;
     }
     return ok ? 0 : 1;

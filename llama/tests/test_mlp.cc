@@ -15,32 +15,32 @@
 #include "rmsnorm.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_mlp");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_mlp");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
 
     // The residual stream as the MLP branch sees it: embedding plus the
     // attention block's output, both taken from the reference.
-    std::vector<float> x_mid = qllm::testing::load_golden("embed_output");
-    const std::vector<float> attn_out = qllm::testing::load_golden("layer0_attn_output");
+    std::vector<float> x_mid = l3llm::testing::load_golden("embed_output");
+    const std::vector<float> attn_out = l3llm::testing::load_golden("layer0_attn_output");
     for (std::size_t i = 0; i < x_mid.size(); ++i) {
         x_mid[i] += attn_out[i];
     }
 
     const std::vector<float> h =
-        qllm::rmsnorm(x_mid, fx.weights.at("model.layers.0.post_attention_layernorm.weight"),
+        l3llm::rmsnorm(x_mid, fx.weights.at("model.layers.0.post_attention_layernorm.weight"),
                       fx.config.rms_norm_eps);
     std::println("[info ] hidden={} -> intermediate={} -> hidden={}", fx.config.hidden_size,
                  fx.config.intermediate_size, fx.config.hidden_size);
 
     const std::vector<float> out =
-        qllm::mlp(h, fx.weights.at("model.layers.0.mlp.gate_proj.weight"),
+        l3llm::mlp(h, fx.weights.at("model.layers.0.mlp.gate_proj.weight"),
                   fx.weights.at("model.layers.0.mlp.up_proj.weight"),
                   fx.weights.at("model.layers.0.mlp.down_proj.weight"));
 
-    const auto result = qllm::testing::compare("layer0_mlp_output", out.data(), out.size(),
-                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, QLLM_GOLDEN_DIR);
+    const auto result = l3llm::testing::compare("layer0_mlp_output", out.data(), out.size(),
+                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, L3LLM_GOLDEN_DIR);
     return result.ok ? 0 : 1;
 }

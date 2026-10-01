@@ -23,7 +23,7 @@
 
 #include "config.h"
 
-namespace qllm {
+namespace l3llm {
 
 // cos/sin for every (position, frequency) pair, each [n_positions,
 // head_dim/2]. Built once and shared by all layers -- the angles depend
@@ -50,4 +50,4 @@ std::vector<float> split_heads(std::span<const float> x, std::int64_t n_heads,
 void apply_rope(std::span<float> x, std::int64_t n_heads, std::int64_t n_tokens,
                 const RopeTable &table);
 
-} // namespace qllm
+} // namespace l3llm

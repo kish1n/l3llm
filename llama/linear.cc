@@ -6,7 +6,7 @@
 #include "die.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 
 std::vector<float> linear(std::span<const float> x, const TensorView &w) {
     if (w.shape.size() != 2) {
@@ -51,4 +51,4 @@ std::vector<float> linear(std::span<const float> x, const TensorView &w) {
     return out;
 }
 
-} // namespace qllm
+} // namespace l3llm

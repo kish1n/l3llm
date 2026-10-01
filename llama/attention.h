@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-namespace qllm {
+namespace l3llm {
 
 // q is [n_heads, n_tokens, head_dim], k and v are [n_kv_heads, n_tokens,
 // head_dim], all post-RoPE except v. Returns [n_heads, n_tokens, head_dim].
@@ -33,4 +33,4 @@ std::vector<float> attention(std::span<const float> q, std::span<const float> k,
 std::vector<float> merge_heads(std::span<const float> x, std::int64_t n_heads,
                                std::int64_t n_tokens, std::int64_t head_dim);
 
-} // namespace qllm
+} // namespace l3llm

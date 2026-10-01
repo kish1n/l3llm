@@ -6,7 +6,7 @@
 #include "die.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 
 std::vector<float> rmsnorm(std::span<const float> x, const TensorView &gamma, double eps) {
     if (gamma.shape.size() != 1) {
@@ -48,4 +48,4 @@ std::vector<float> rmsnorm(std::span<const float> x, const TensorView &gamma, do
     return out;
 }
 
-} // namespace qllm
+} // namespace l3llm

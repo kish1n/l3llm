@@ -17,11 +17,11 @@
 #include "rope.h"
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // x is [n_tokens, hidden] and is updated in place. `table` is shared by
 // every layer -- RoPE angles depend only on the config.
 void decoder_layer(std::span<float> x, const SafeTensors &weights, const ModelConfig &cfg,
                    std::int64_t index, const RopeTable &table, std::int64_t n_tokens);
 
-} // namespace qllm
+} // namespace l3llm

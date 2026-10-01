@@ -7,7 +7,7 @@
 #include "linear.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 // z * sigmoid(z). Safe at both extremes: a large positive z gives
@@ -38,4 +38,4 @@ std::vector<float> mlp(std::span<const float> h, const TensorView &gate, const T
     return linear(g, down);
 }
 
-} // namespace qllm
+} // namespace l3llm

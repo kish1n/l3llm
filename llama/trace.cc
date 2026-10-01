@@ -7,7 +7,7 @@
 
 #include "die.h"
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 // JSON quoting (std::quoted alone does not escape control characters).
@@ -75,7 +75,7 @@ void TraceSession::write(const std::filesystem::path &path) const {
     out.imbue(std::locale::classic());
     out << std::setprecision(17);
     out << R"({"displayTimeUnit":"ms","traceEvents":[)"
-        << R"({"ph":"M","pid":1,"tid":1,"name":"process_name","args":{"name":"qllm"}},)"
+        << R"({"ph":"M","pid":1,"tid":1,"name":"process_name","args":{"name":"l3llm"}},)"
         << R"({"ph":"M","pid":1,"tid":1,"name":"thread_name","args":{"name":"forward thread"}})";
     for (const Event &event : events_) {
         const double start_us =
@@ -107,4 +107,4 @@ void TraceSession::write(const std::filesystem::path &path) const {
     }
 }
 
-} // namespace qllm
+} // namespace l3llm

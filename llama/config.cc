@@ -6,7 +6,7 @@
 #include "die.h"
 #include "json.h"
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 [[noreturn]] void fail(const std::filesystem::path &path, std::string_view message) {
@@ -127,4 +127,4 @@ ModelConfig ModelConfig::load(const std::filesystem::path &model_dir) {
     return cfg;
 }
 
-} // namespace qllm
+} // namespace l3llm

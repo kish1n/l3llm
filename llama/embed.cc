@@ -5,7 +5,7 @@
 #include "die.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 
 std::vector<float> embed(const SafeTensors &weights, const ModelConfig &cfg,
                          std::span<const std::int32_t> token_ids) {
@@ -38,4 +38,4 @@ std::vector<float> embed(const SafeTensors &weights, const ModelConfig &cfg,
     return out;
 }
 
-} // namespace qllm
+} // namespace l3llm

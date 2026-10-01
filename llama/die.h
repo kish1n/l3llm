@@ -15,7 +15,7 @@
 #include <string_view>
 #include <utility>
 
-namespace qllm {
+namespace l3llm {
 
 [[noreturn]] void die_message(std::string_view message);
 
@@ -23,4 +23,4 @@ template <typename... Args> [[noreturn]] void die(std::format_string<Args...> fm
     die_message(std::format(fmt, std::forward<Args>(args)...));
 }
 
-} // namespace qllm
+} // namespace l3llm

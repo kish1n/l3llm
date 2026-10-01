@@ -6,7 +6,7 @@
 #include "die.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 // Hugging Face's _compute_llama3_parameters. Bands are chosen by
@@ -127,4 +127,4 @@ void apply_rope(std::span<float> x, std::int64_t n_heads, std::int64_t n_tokens,
     }
 }
 
-} // namespace qllm
+} // namespace l3llm

@@ -1,4 +1,4 @@
-# qllm
+# l3llm
 cpu sram-only inference engine
 
 ## Operator timeline
@@ -13,7 +13,7 @@ build/profile/llama/llama --trace build/forward.json --warmup 1 \
 ```
 
 Open [ui.perfetto.dev](https://ui.perfetto.dev), choose **Open trace file**, and
-load `build/forward.json`. Expand the `qllm` / `forward thread` track. The nested
+load `build/forward.json`. Expand the `l3llm` / `forward thread` track. The nested
 bars show the forward pass, numbered layers, attention, MLP, projections,
 normalization, RoPE, residual adds, and output head. Hover a compute bar to see
 its estimated GFLOP/s in the label; select it for the full tensor name, estimated
@@ -46,8 +46,8 @@ Warmup does not guarantee that weights fit in cache.
 Run checks with:
 
 ```sh
-QLLM_MODEL_DIR=/path/to/model ctest --test-dir build/profile --output-on-failure
+L3LLM_MODEL_DIR=/path/to/model ctest --test-dir build/profile --output-on-failure
 ```
 
 The trace test uses small synthetic inputs and runs without model weights; the
-golden model tests require `QLLM_MODEL_DIR` and `reference/golden`.
+golden model tests require `L3LLM_MODEL_DIR` and `reference/golden`.

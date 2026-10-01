@@ -17,7 +17,7 @@
 static_assert(std::endian::native == std::endian::little,
               "safetensors is little-endian; a byte-swapping path would be needed here");
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 // A header larger than this is corruption, not a real weights file
@@ -301,4 +301,4 @@ const TensorView &SafeTensors::at(std::string_view name) const {
     die("safetensors: no tensor named '{}' in {}", name, path_.string());
 }
 
-} // namespace qllm
+} // namespace l3llm

@@ -8,7 +8,7 @@
 #include "config.h"
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // Both write to stdout, indented to sit under the "1. Reading Inputs"
 // heading.
@@ -20,4 +20,4 @@ void print_config(const ModelConfig &cfg);
 // decide whether to mention the tied lm_head.
 void print_safetensors(const SafeTensors &weights, const ModelConfig &cfg);
 
-} // namespace qllm
+} // namespace l3llm

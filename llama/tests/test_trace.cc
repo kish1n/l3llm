@@ -16,7 +16,7 @@
 
 namespace {
 
-using qllm::json::Value;
+using l3llm::json::Value;
 
 void require(bool ok, std::string_view message) {
     if (!ok) {
@@ -30,14 +30,14 @@ const Value &field(const Value &value, std::string_view key) {
     return *result;
 }
 
-std::vector<Value> read_events(const qllm::TraceSession &trace) {
+std::vector<Value> read_events(const l3llm::TraceSession &trace) {
     const auto path = std::filesystem::path("test_trace_output.json");
     trace.write(path);
     std::ifstream input(path);
     const std::string text{std::istreambuf_iterator<char>(input), {}};
     input.close();
     std::filesystem::remove(path);
-    const Value root = qllm::json::parse(text, "trace test");
+    const Value root = l3llm::json::parse(text, "trace test");
     std::vector<Value> events;
     for (const auto &event : field(root, "traceEvents").array) {
         if (field(event, "ph").string == "X") {
@@ -51,14 +51,14 @@ double count(const Value &event) { return field(field(event, "args"), "estimated
 
 void test_nested_scopes() {
     const std::string unusual_name = "parent\"\\\n\t";
-    const qllm::TraceSession trace;
+    const l3llm::TraceSession trace;
     {
-        const qllm::TraceScope parent(unusual_name, 10);
+        const l3llm::TraceScope parent(unusual_name, 10);
         {
-            const qllm::TraceScope child("child", 20);
-            const qllm::TraceScope grandchild("grandchild", 30);
+            const l3llm::TraceScope child("child", 20);
+            const l3llm::TraceScope grandchild("grandchild", 30);
         }
-        const qllm::TraceScope copy("copy");
+        const l3llm::TraceScope copy("copy");
     }
     const auto events = read_events(trace);
     require(events.size() == 4, "scope count");
@@ -88,14 +88,14 @@ void test_nested_scopes() {
 
 void test_linear() {
     const std::vector<std::uint16_t> weights(12, 0x3f80); // 3 x 4, all 1.0 BF16
-    const qllm::TensorView w{"model.layers.0.mlp.gate_proj.weight",
-                             qllm::DType::BF16,
+    const l3llm::TensorView w{"model.layers.0.mlp.gate_proj.weight",
+                             l3llm::DType::BF16,
                              {3, 4},
                              std::as_bytes(std::span(weights))};
     const std::vector<float> x{1, 2, 3, 4, 5, 6, 7, 8}; // two tokens
-    const auto baseline = qllm::linear(x, w);
-    const qllm::TraceSession trace;
-    require(qllm::linear(x, w) == baseline, "tracing changes linear output");
+    const auto baseline = l3llm::linear(x, w);
+    const l3llm::TraceSession trace;
+    require(l3llm::linear(x, w) == baseline, "tracing changes linear output");
     const auto events = read_events(trace);
     require(events.size() == 1 && count(events[0]) == 48, "linear FLOPs: 2*2*3*4");
     require(field(field(events[0], "args"), "operator").string == "gate_proj", "projection role");
@@ -103,17 +103,17 @@ void test_linear() {
 }
 
 void test_attention() {
-    qllm::ModelConfig cfg;
+    l3llm::ModelConfig cfg;
     cfg.head_dim = 2;
     cfg.num_attention_heads = 2;
     cfg.num_key_value_heads = 1;
     const std::vector<float> q{1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1};
     const std::vector<float> k{1, 0, 0, 1, 1, 1};
     const std::vector<float> v{2, 3, 5, 7, 11, 13};
-    const auto baseline = qllm::attention(q, k, v, cfg, 3);
+    const auto baseline = l3llm::attention(q, k, v, cfg, 3);
     for (const bool detailed : {false, true}) {
-        const qllm::TraceSession trace(true, detailed);
-        require(qllm::attention(q, k, v, cfg, 3) == baseline, "tracing changes attention output");
+        const l3llm::TraceSession trace(true, detailed);
+        require(l3llm::attention(q, k, v, cfg, 3) == baseline, "tracing changes attention output");
         const auto events = read_events(trace);
         require(events.size() == (detailed ? 19 : 1), "attention detail scope count");
         // Six causal pairs/head: 120 score+value ops, 30 softmax ops,
@@ -131,16 +131,16 @@ void test_attention() {
 
 void test_disabled_and_growth() {
     {
-        const qllm::TraceSession trace(false);
-        const qllm::TraceScope ignored("disabled", 42);
-        require(!qllm::TraceSession::enabled(), "disabled session became active");
+        const l3llm::TraceSession trace(false);
+        const l3llm::TraceScope ignored("disabled", 42);
+        require(!l3llm::TraceSession::enabled(), "disabled session became active");
         require(read_events(trace).empty(), "disabled trace records events");
     }
-    const qllm::TraceSession trace;
+    const l3llm::TraceSession trace;
     {
-        const qllm::TraceScope parent("parent");
+        const l3llm::TraceScope parent("parent");
         for (int i = 0; i < 4200; ++i) {
-            const qllm::TraceScope child("child", 1);
+            const l3llm::TraceScope child("child", 1);
         }
     }
     const auto events = read_events(trace);
@@ -156,7 +156,7 @@ int main() {
         test_linear();
         test_attention();
         test_disabled_and_growth();
-        require(!qllm::TraceSession::enabled(), "session did not restore inactive state");
+        require(!l3llm::TraceSession::enabled(), "session did not restore inactive state");
         std::println("[pass] trace counts, nesting, rates, escaping and kernel equivalence");
         return 0;
     } catch (const std::exception &error) {

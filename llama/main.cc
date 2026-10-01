@@ -1,5 +1,5 @@
 // Usage: llama [--trace file.json] [--trace-attention] [--warmup N] [model-dir] [token-id ...]
-//   Falls back to $QLLM_MODEL_DIR when no model dir is given. With token
+//   Falls back to $L3LLM_MODEL_DIR when no model dir is given. With token
 //   ids, runs a forward pass and prints the most likely next tokens;
 //   without them, stops after the load summary. There is no tokenizer
 //   yet, so ids come from the caller (reference/golden/manifest.json has
@@ -25,19 +25,19 @@
 
 // Owns the mmap: move-only, because SafeTensors is.
 struct LoadedModel {
-    qllm::ModelConfig config;
-    qllm::SafeTensors weights;
+    l3llm::ModelConfig config;
+    l3llm::SafeTensors weights;
 };
 
 LoadedModel load_model(std::string_view model_dir) {
     std::println("1. Reading Inputs");
     std::println("   model dir: {}", model_dir);
 
-    qllm::ModelConfig cfg = qllm::ModelConfig::load(model_dir);
-    qllm::print_config(cfg);
-    qllm::SafeTensors weights =
-        qllm::SafeTensors::open(std::filesystem::path(model_dir) / "model.safetensors");
-    qllm::print_safetensors(weights, cfg);
+    l3llm::ModelConfig cfg = l3llm::ModelConfig::load(model_dir);
+    l3llm::print_config(cfg);
+    l3llm::SafeTensors weights =
+        l3llm::SafeTensors::open(std::filesystem::path(model_dir) / "model.safetensors");
+    l3llm::print_safetensors(weights, cfg);
 
     // Flat [vocab_size, hidden_size] in row-major order, so the first
     // hidden_size elements are token 0's embedding. Widening four of them
@@ -46,8 +46,8 @@ LoadedModel load_model(std::string_view model_dir) {
     const auto token_embeddings = weights.at("model.embed_tokens.weight").bf16();
     std::println();
     std::println("   embed_tokens row 0, first 4: {:.6f} {:.6f} {:.6f} {:.6f}",
-                 qllm::bf16_to_f32(token_embeddings[0]), qllm::bf16_to_f32(token_embeddings[1]),
-                 qllm::bf16_to_f32(token_embeddings[2]), qllm::bf16_to_f32(token_embeddings[3]));
+                 l3llm::bf16_to_f32(token_embeddings[0]), l3llm::bf16_to_f32(token_embeddings[1]),
+                 l3llm::bf16_to_f32(token_embeddings[2]), l3llm::bf16_to_f32(token_embeddings[3]));
     return LoadedModel{std::move(cfg), std::move(weights)};
 }
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
             "  --trace-attention   include per-row scores, softmax and weighted values\n"
             "  --warmup N          run N untraced forwards before the measured pass\n"
             "  --help              show this help\n"
-            "  QLLM_MODEL_DIR is used when no model directory is given",
+            "  L3LLM_MODEL_DIR is used when no model directory is given",
             argv[0]);
     };
     std::string trace_path;
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     std::string model_dir;
     if (!positional.empty()) {
         model_dir = positional.front();
-    } else if (const char *env = std::getenv("QLLM_MODEL_DIR")) {
+    } else if (const char *env = std::getenv("L3LLM_MODEL_DIR")) {
         model_dir = env;
     } else {
         usage();
@@ -147,10 +147,10 @@ int main(int argc, char **argv) {
     std::println("   tokens              {}", token_ids.size());
 
     for (int i = 0; i < warmup; ++i) {
-        (void)qllm::forward(model.weights, model.config, token_ids);
+        (void)l3llm::forward(model.weights, model.config, token_ids);
     }
-    const qllm::TraceSession trace(!trace_path.empty(), detailed_attention);
-    const qllm::ForwardResult out = qllm::forward(model.weights, model.config, token_ids);
+    const l3llm::TraceSession trace(!trace_path.empty(), detailed_attention);
+    const l3llm::ForwardResult out = l3llm::forward(model.weights, model.config, token_ids);
     if (!trace_path.empty()) {
         trace.write(trace_path);
         std::println("   operator timeline   {} (open in https://ui.perfetto.dev)", trace_path);

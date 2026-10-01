@@ -23,45 +23,45 @@
 #include "rope.h"
 
 int main() {
-    if (!qllm::testing::have_model()) {
-        qllm::testing::print_skip("test_attention");
-        return qllm::testing::kSkip;
+    if (!l3llm::testing::have_model()) {
+        l3llm::testing::print_skip("test_attention");
+        return l3llm::testing::kSkip;
     }
-    const qllm::testing::Fixture fx = qllm::testing::load();
-    const qllm::ModelConfig &cfg = fx.config;
+    const l3llm::testing::Fixture fx = l3llm::testing::load();
+    const l3llm::ModelConfig &cfg = fx.config;
     const std::int64_t n_tokens = static_cast<std::int64_t>(fx.token_ids.size());
 
-    const std::vector<float> x = qllm::embed(fx.weights, cfg, fx.token_ids);
+    const std::vector<float> x = l3llm::embed(fx.weights, cfg, fx.token_ids);
     const std::vector<float> h =
-        qllm::rmsnorm(x, fx.weights.at("model.layers.0.input_layernorm.weight"), cfg.rms_norm_eps);
+        l3llm::rmsnorm(x, fx.weights.at("model.layers.0.input_layernorm.weight"), cfg.rms_norm_eps);
 
-    const qllm::RopeTable table = qllm::rope_table(cfg, n_tokens);
+    const l3llm::RopeTable table = l3llm::rope_table(cfg, n_tokens);
 
     std::vector<float> q =
-        qllm::split_heads(qllm::linear(h, fx.weights.at("model.layers.0.self_attn.q_proj.weight")),
+        l3llm::split_heads(l3llm::linear(h, fx.weights.at("model.layers.0.self_attn.q_proj.weight")),
                           cfg.num_attention_heads, cfg.head_dim);
     std::vector<float> k =
-        qllm::split_heads(qllm::linear(h, fx.weights.at("model.layers.0.self_attn.k_proj.weight")),
+        l3llm::split_heads(l3llm::linear(h, fx.weights.at("model.layers.0.self_attn.k_proj.weight")),
                           cfg.num_key_value_heads, cfg.head_dim);
     // V is split into heads but never rotated.
     const std::vector<float> v =
-        qllm::split_heads(qllm::linear(h, fx.weights.at("model.layers.0.self_attn.v_proj.weight")),
+        l3llm::split_heads(l3llm::linear(h, fx.weights.at("model.layers.0.self_attn.v_proj.weight")),
                           cfg.num_key_value_heads, cfg.head_dim);
 
-    qllm::apply_rope(q, cfg.num_attention_heads, n_tokens, table);
-    qllm::apply_rope(k, cfg.num_key_value_heads, n_tokens, table);
+    l3llm::apply_rope(q, cfg.num_attention_heads, n_tokens, table);
+    l3llm::apply_rope(k, cfg.num_key_value_heads, n_tokens, table);
 
     std::println("[info ] {} q heads / {} kv heads ({}:1 GQA), head_dim={}, {} tokens",
                  cfg.num_attention_heads, cfg.num_key_value_heads, cfg.heads_per_kv_group(),
                  cfg.head_dim, n_tokens);
 
-    const std::vector<float> ctx = qllm::attention(q, k, v, cfg, n_tokens);
+    const std::vector<float> ctx = l3llm::attention(q, k, v, cfg, n_tokens);
     const std::vector<float> merged =
-        qllm::merge_heads(ctx, cfg.num_attention_heads, n_tokens, cfg.head_dim);
+        l3llm::merge_heads(ctx, cfg.num_attention_heads, n_tokens, cfg.head_dim);
     const std::vector<float> out =
-        qllm::linear(merged, fx.weights.at("model.layers.0.self_attn.o_proj.weight"));
+        l3llm::linear(merged, fx.weights.at("model.layers.0.self_attn.o_proj.weight"));
 
-    const auto result = qllm::testing::compare("layer0_attn_output", out.data(), out.size(),
-                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, QLLM_GOLDEN_DIR);
+    const auto result = l3llm::testing::compare("layer0_attn_output", out.data(), out.size(),
+                                               /*abs_tol=*/1e-4, /*rel_tol=*/1e-4, L3LLM_GOLDEN_DIR);
     return result.ok ? 0 : 1;
 }

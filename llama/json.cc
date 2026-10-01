@@ -6,7 +6,7 @@
 
 #include "die.h"
 
-namespace qllm::json {
+namespace l3llm::json {
 namespace {
 
 constexpr int kMaxDepth = 64;
@@ -375,4 +375,4 @@ Value parse(std::string_view text, std::string_view origin) {
     return Parser(text, origin).parse_document();
 }
 
-} // namespace qllm::json
+} // namespace l3llm::json

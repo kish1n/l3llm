@@ -16,7 +16,7 @@
 
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // x is [n_tokens, in] float32 row-major, w the [out, in] BF16 weight.
 // Returns [n_tokens, out] float32.
@@ -25,4 +25,4 @@ namespace qllm {
 // Widening happens in registers: the weight matrix is never materialized.
 std::vector<float> linear(std::span<const float> x, const TensorView &w);
 
-} // namespace qllm
+} // namespace l3llm

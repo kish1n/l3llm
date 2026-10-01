@@ -15,7 +15,7 @@
 #include "config.h"
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 struct ForwardResult {
     std::vector<float> hidden; // after model.norm, [n_tokens, hidden_size]
@@ -36,4 +36,4 @@ ForwardResult forward(const SafeTensors &weights, const ModelConfig &cfg,
 // lower id, matching torch.argmax.
 std::int32_t argmax_last(const ForwardResult &out, const ModelConfig &cfg);
 
-} // namespace qllm
+} // namespace l3llm

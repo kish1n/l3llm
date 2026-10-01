@@ -12,7 +12,7 @@
 #include "rmsnorm.h"
 #include "trace.h"
 
-namespace qllm {
+namespace l3llm {
 namespace {
 
 void add_into(std::span<float> x, std::span<const float> delta) {
@@ -66,4 +66,4 @@ void decoder_layer(std::span<float> x, const SafeTensors &weights, const ModelCo
     }
 }
 
-} // namespace qllm
+} // namespace l3llm

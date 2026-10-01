@@ -15,11 +15,11 @@
 
 #include "safetensors.h"
 
-namespace qllm {
+namespace l3llm {
 
 // x is [n_tokens, hidden] row-major, gamma the [hidden] BF16 gain from the
 // weights file, eps the config's rms_norm_eps. Returns a fresh buffer: the
 // caller still needs x intact for the residual add.
 std::vector<float> rmsnorm(std::span<const float> x, const TensorView &gamma, double eps);
 
-} // namespace qllm
+} // namespace l3llm
